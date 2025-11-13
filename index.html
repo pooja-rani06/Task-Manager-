@@ -1,588 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Task Manager</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        .header p {
-            color: #666;
-            font-size: 1.1em;
-        }
-        .main-content {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-        }
-        .sidebar {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            height: fit-content;
-            position: sticky;
-            top: 20px;
-        }
-        .menu-item {
-            padding: 15px;
-            margin: 10px 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 1em;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .menu-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        .menu-item.active {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .content-area {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            min-height: 500px;
-        }
-        .section {
-            display: none;
-        }
-        .section.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-        }
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s;
-        }
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        .btn {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-        }
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-        .task-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border-left: 5px solid #667eea;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .task-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .task-card.completed {
-            opacity: 0.7;
-            border-left-color: #38ef7d;
-        }
-        .task-card.overdue {
-            border-left-color: #f5576c;
-        }
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .task-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #333;
-        }
-        .task-priority {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        .priority-1 { background: #ff6b6b; color: white; }
-        .priority-2 { background: #ffa726; color: white; }
-        .priority-3 { background: #ffd54f; color: #333; }
-        .priority-4 { background: #66bb6a; color: white; }
-        .priority-5 { background: #42a5f5; color: white; }
-        .task-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #e0e0e0;
-        }
-        .task-meta-item {
-            font-size: 0.9em;
-            color: #666;
-        }
-        .task-meta-item strong {
-            color: #333;
-        }
-        .task-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .task-actions button {
-            padding: 8px 15px;
-            font-size: 0.9em;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        .stat-label {
-            font-size: 1em;
-            opacity: 0.9;
-        }
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            animation: slideIn 0.3s;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(400px); }
-            to { transform: translateX(0); }
-        }
-        .notification.success {
-            border-left: 5px solid #38ef7d;
-        }
-        .notification.error {
-            border-left: 5px solid #f5576c;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            .sidebar {
-                position: static;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Task Manager (Offline Mode)</title>
+  <style>
+    /* --- same styling as your original --- */
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+    .container{max-width:1200px;margin:0 auto}
+    .header{background:white;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.2);text-align:center;margin-bottom:30px}
+    .header h1{color:#667eea;font-size:2.5em;margin-bottom:10px}
+    .main-content{display:grid;grid-template-columns:300px 1fr;gap:20px}
+    .sidebar{background:white;padding:20px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.2);height:fit-content;position:sticky;top:20px}
+    .menu-item{padding:15px;margin:10px 0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:10px;cursor:pointer;width:100%;font-size:1em;transition:transform 0.2s,box-shadow 0.2s}
+    .menu-item:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,0.4)}
+    .menu-item.active{background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%)}
+    .content-area{background:white;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.2);min-height:500px}
+    .section{display:none}.section.active{display:block;animation:fadeIn .3s}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .form-group{margin-bottom:20px}
+    .form-group label{display:block;margin-bottom:8px;color:#333;font-weight:600}
+    .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;transition:border-color .3s}
+    .btn{padding:12px 30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-size:1em;font-weight:600;transition:transform .2s,box-shadow .2s}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,0.4)}
+    .btn-danger{background:linear-gradient(135deg,#f5576c 0%,#f093fb 100%)}
+    .btn-success{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%)}
+    .task-card{background:#f8f9fa;padding:20px;border-radius:10px;margin-bottom:15px;border-left:5px solid #667eea;transition:transform .2s,box-shadow .2s}
+    .task-card:hover{transform:translateX(5px);box-shadow:0 5px 15px rgba(0,0,0,0.1)}
+    .task-card.completed{opacity:.7;border-left-color:#38ef7d}
+    .task-card.overdue{border-left-color:#f5576c}
+    .task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .task-title{font-size:1.3em;font-weight:600;color:#333}
+    .task-priority{padding:5px 15px;border-radius:20px;font-size:.9em;font-weight:600}
+    .priority-1{background:#ff6b6b;color:white}.priority-2{background:#ffa726;color:white}.priority-3{background:#ffd54f;color:#333}.priority-4{background:#66bb6a;color:white}.priority-5{background:#42a5f5;color:white}
+    .task-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0}
+    .task-meta-item{font-size:.9em;color:#666}.task-meta-item strong{color:#333}
+    .notification{position:fixed;top:20px;right:20px;padding:15px 25px;background:white;border-radius:8px;box-shadow:0 5px 15px rgba(0,0,0,0.3);z-index:1000;animation:slideIn .3s}
+    @keyframes slideIn{from{transform:translateX(400px)}to{transform:translateX(0)}}
+    .notification.success{border-left:5px solid #38ef7d}.notification.error{border-left:5px solid #f5576c}
+    .empty-state{text-align:center;padding:60px 20px;color:#999}
+    @media(max-width:768px){.main-content{grid-template-columns:1fr}.sidebar{position:static}}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📋 Smart Task Manager</h1>
-            <p>C++ Backend with Web Interface - Auto-Scheduling & Priority System</p>
-        </div>
-        <div class="main-content">
-            <div class="sidebar">
-                <button class="menu-item active" onclick="showSection('add', event)">➕ Add New Task</button>
-                <button class="menu-item" onclick="showSection('all', event)">📝 All Tasks</button>
-                <button class="menu-item" onclick="showSection('pending', event)">⏳ Pending Tasks</button>
-                <button class="menu-item" onclick="showSection('recommended', event)">⭐ Recommended Task</button>
-                <button class="menu-item" onclick="showSection('stats', event)">📊 Statistics</button>
-                <button class="menu-item" onclick="showSection('sort', event)">🔄 Sort Tasks</button>
-                <button class="menu-item" onclick="processRecurring()">🔁 Process Recurring</button>
-                <button class="menu-item" onclick="undo()">↩ Undo</button>
-                <button class="menu-item" onclick="redo()">↪ Redo</button>
-            </div>
-            <div class="content-area">
-                <div id="add" class="section active">
-                    <h2>Add New Task</h2>
-                    <form id="addTaskForm" onsubmit="addTask(event)">
-                        <div class="form-group">
-                            <label>Task Name *</label>
-                            <input type="text" id="taskName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Description *</label>
-                            <textarea id="taskDesc" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Priority (1=Highest) *</label>
-                            <select id="taskPriority" required>
-                                <option value="1">1 - Critical</option>
-                                <option value="2">2 - High</option>
-                                <option value="3" selected>3 - Medium</option>
-                                <option value="4">4 - Low</option>
-                                <option value="5">5 - Very Low</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Duration (minutes) *</label>
-                            <input type="number" id="taskDuration" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Days from now *</label>
-                            <input type="number" id="taskDays" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Additional hours *</label>
-                            <input type="number" id="taskHours" min="0" max="23" value="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="taskRecurring"> Recurring Task
-                            </label>
-                        </div>
-                        <div class="form-group" id="recurringDaysGroup" style="display:none;">
-                            <label>Repeat every X days</label>
-                            <input type="number" id="taskRecurDays" min="1">
-                        </div>
-                        <button type="submit" class="btn">Add Task</button>
-                    </form>
-                </div>
-                <div id="all" class="section">
-                    <h2>All Tasks</h2>
-                    <div id="allTasksList"></div>
-                </div>
-                <div id="pending" class="section">
-                    <h2>Pending Tasks</h2>
-                    <div id="pendingTasksList"></div>
-                </div>
-                <div id="recommended" class="section">
-                    <h2>Next Recommended Task</h2>
-                    <div id="recommendedTask"></div>
-                </div>
-                <div id="stats" class="section">
-                    <h2>Task Statistics</h2>
-                    <div id="statsContent"></div>
-                </div>
-                <div id="sort" class="section">
-                    <h2>Sort Tasks</h2>
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        <button class="btn" onclick="sortTasks('priority')">Sort by Priority</button>
-                        <button class="btn" onclick="sortTasks('deadline')">Sort by Deadline</button>
-                        <button class="btn" onclick="sortTasks('duration')">Sort by Duration</button>
-                    </div>
-                    <div id="sortedTasksList"></div>
-                </div>
-            </div>
-        </div>
+<div class="container">
+  <div class="header">
+    <h1>📋 Smart Task Manager (Offline Mode)</h1>
+    <p>All tasks stored in your browser — no server needed!</p>
+  </div>
+
+  <div class="main-content">
+    <div class="sidebar">
+      <button class="menu-item active" onclick="showSection('add', event)">➕ Add New Task</button>
+      <button class="menu-item" onclick="showSection('all', event)">📝 All Tasks</button>
+      <button class="menu-item" onclick="showSection('pending', event)">⏳ Pending</button>
+      <button class="menu-item" onclick="showSection('stats', event)">📊 Stats</button>
+      <button class="menu-item" onclick="showSection('sort', event)">🔄 Sort</button>
+      <button class="menu-item" onclick="undo()">↩ Undo</button>
+      <button class="menu-item" onclick="redo()">↪ Redo</button>
     </div>
 
-    <script>
-        const API_URL = 'http://localhost:8080/api';
+    <div class="content-area">
+      <div id="add" class="section active">
+        <h2>Add New Task</h2>
+        <form id="addTaskForm" onsubmit="addTask(event)">
+          <div class="form-group">
+            <label>Task Name *</label>
+            <input type="text" id="taskName" required>
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea id="taskDesc" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Priority *</label>
+            <select id="taskPriority">
+              <option value="1">1 - Critical</option>
+              <option value="2">2 - High</option>
+              <option value="3" selected>3 - Medium</option>
+              <option value="4">4 - Low</option>
+              <option value="5">5 - Very Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration (mins) *</label>
+            <input type="number" id="taskDuration" min="1" required>
+          </div>
+          <div class="form-group">
+            <label>Deadline (hours from now)</label>
+            <input type="number" id="taskHours" min="1" required>
+          </div>
+          <button type="submit" class="btn">Add Task</button>
+        </form>
+      </div>
 
-        document.getElementById('taskRecurring').addEventListener('change', function() {
-            document.getElementById('recurringDaysGroup').style.display = 
-                this.checked ? 'block' : 'none';
-        });
+      <div id="all" class="section"><h2>All Tasks</h2><div id="allTasksList"></div></div>
+      <div id="pending" class="section"><h2>Pending Tasks</h2><div id="pendingTasksList"></div></div>
+      <div id="stats" class="section"><h2>Statistics</h2><div id="statsContent"></div></div>
+      <div id="sort" class="section">
+        <h2>Sort Tasks</h2>
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <button class="btn" onclick="sortTasks('priority')">By Priority</button>
+          <button class="btn" onclick="sortTasks('deadline')">By Deadline</button>
+          <button class="btn" onclick="sortTasks('duration')">By Duration</button>
+        </div>
+        <div id="sortedTasksList"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-        }
+<script>
+let undoStack = [], redoStack = [];
 
-        function showSection(sectionId, event) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
-            if(event) event.target.classList.add('active');
+function loadTasks(){ return JSON.parse(localStorage.getItem('tasks')||'[]'); }
+function saveTasks(t){ localStorage.setItem('tasks', JSON.stringify(t)); }
 
-            if (sectionId === 'all') displayAllTasks();
-            if (sectionId === 'pending') displayPendingTasks();
-            if (sectionId === 'recommended') displayRecommendedTask();
-            if (sectionId === 'stats') displayStats();
-            if (sectionId === 'sort') document.getElementById('sortedTasksList').innerHTML = 
-                '<div class="empty-state">Select a sort option to view results.</div>';
-        }
+function pushUndo(){
+  undoStack.push(loadTasks());
+  if(undoStack.length>20) undoStack.shift();
+  redoStack=[];
+}
 
-        function formatDate(timestamp) {
-            if (!timestamp) return 'N/A';
-            const date = new Date(timestamp * 1000);
-            return date.toLocaleString();
-        }
+function showNotification(msg,type='success'){
+  const n=document.createElement('div');
+  n.className=`notification ${type}`;
+  n.textContent=msg;
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(),3000);
+}
 
-        function getPriorityClass(priority) {
-            return `priority-${priority}`;
-        }
+function showSection(id,e){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(e) e.target.classList.add('active');
+  if(id==='all') displayAll();
+  if(id==='pending') displayPending();
+  if(id==='stats') displayStats();
+  if(id==='sort') document.getElementById('sortedTasksList').innerHTML='<div class="empty-state">Select a sort option.</div>';
+}
 
-        function createCard(task) {
-            const now = Date.now() / 1000;
-            const isOverdue = !task.completed && task.deadline < now;
-            return `
-                <div class="task-card ${task.completed ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}">
-                    <div class="task-header">
-                        <span class="task-title">${task.name} (ID: ${task.id})</span>
-                        <span class="task-priority ${getPriorityClass(task.priority)}">P${task.priority}</span>
-                    </div>
-                    <p>${task.description}</p>
-                    <div class="task-meta">
-                        <div class="task-meta-item"><strong>Deadline:</strong> ${formatDate(task.deadline)}</div>
-                        <div class="task-meta-item"><strong>Duration:</strong> ${task.duration} mins</div>
-                        <div class="task-meta-item"><strong>Status:</strong> ${task.completed ? 'Completed' : 'Pending'} ${isOverdue ? '(OVERDUE)' : ''}</div>
-                        <div class="task-meta-item"><strong>Recurring:</strong> ${task.isRecurring ? `Every ${task.recurringDays} days` : 'No'}</div>
-                    </div>
-                    <div class="task-actions">
-                        ${!task.completed ? `<button class="btn btn-success" onclick="markCompleted(${task.id})">✅ Complete</button>` : ''}
-                        <button class="btn btn-danger" onclick="removeTask(${task.id})">🗑 Delete</button>
-                    </div>
-                </div>
-            `;
-        }
+function addTask(e){
+  e.preventDefault();
+  const tasks=loadTasks();
+  const hours=parseInt(document.getElementById('taskHours').value);
+  const deadline=Math.floor((Date.now()/1000)+(hours*3600));
+  const t={
+    id:Date.now(),
+    name:taskName.value,
+    description:taskDesc.value,
+    priority:+taskPriority.value,
+    duration:+taskDuration.value,
+    deadline,
+    completed:false
+  };
+  pushUndo();
+  tasks.push(t);
+  saveTasks(tasks);
+  showNotification('Task added!');
+  e.target.reset();
+}
 
-               async function apiCall(endpoint, params = {}) {
-            const queryString = new URLSearchParams(params).toString();
-            const url = `${API_URL}/${endpoint}${queryString ? '?' + queryString : ''}`;
-            try {
-                const response = await fetch(url);
-                // try to parse JSON, but handle non-JSON responses gracefully
-                const text = await response.text();
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    // return fallback object
-                    return { success: false, message: 'Invalid JSON from server', raw: text };
-                }
-            } catch (error) {
-                showNotification('Error connecting to server. Make sure C++ server is running!', 'error');
-                return { success: false, message: 'Server connection error' };
-            }
-        }
+function createCard(t){
+  const overdue=!t.completed && t.deadline<Date.now()/1000;
+  return `<div class="task-card ${t.completed?'completed':''} ${overdue?'overdue':''}">
+    <div class="task-header">
+      <span class="task-title">${t.name}</span>
+      <span class="task-priority priority-${t.priority}">P${t.priority}</span>
+    </div>
+    <p>${t.description}</p>
+    <div class="task-meta">
+      <div><strong>Deadline:</strong> ${new Date(t.deadline*1000).toLocaleString()}</div>
+      <div><strong>Duration:</strong> ${t.duration} min</div>
+      <div><strong>Status:</strong> ${t.completed?'Completed':'Pending'} ${overdue?'(Overdue)':''}</div>
+    </div>
+    <div class="task-actions">
+      ${!t.completed?`<button class="btn btn-success" onclick="markDone(${t.id})">✅ Done</button>`:''}
+      <button class="btn btn-danger" onclick="delTask(${t.id})">🗑 Delete</button>
+    </div>
+  </div>`;
+}
 
+function displayTasks(list,id){
+  const c=document.getElementById(id);
+  c.innerHTML=list.length?list.map(createCard).join(''):'<div class="empty-state">No tasks here.</div>';
+}
 
-        async function addTask(e) {
-            e.preventDefault();
-            const days = parseInt(document.getElementById('taskDays').value);
-            const hours = parseInt(document.getElementById('taskHours').value);
-            const deadlineDate = new Date();
-            deadlineDate.setDate(deadlineDate.getDate() + days);
-            deadlineDate.setHours(deadlineDate.getHours() + hours);
-            const deadlineTimestamp = Math.floor(deadlineDate.getTime() / 1000);
+function displayAll(){displayTasks(loadTasks(),'allTasksList');}
+function displayPending(){displayTasks(loadTasks().filter(t=>!t.completed),'pendingTasksList');}
 
-            const params = {
-                name: document.getElementById('taskName').value,
-                description: document.getElementById('taskDesc').value,
-                priority: document.getElementById('taskPriority').value,
-                duration: document.getElementById('taskDuration').value,
-                deadline: deadlineTimestamp,
-                isRecurring: document.getElementById('taskRecurring').checked,
-                recurringDays: document.getElementById('taskRecurring').checked ? 
-                    document.getElementById('taskRecurDays').value : 0
-            };
+function markDone(id){
+  const t=loadTasks();
+  pushUndo();
+  const f=t.find(x=>x.id===id);
+  if(f){f.completed=true;saveTasks(t);showNotification('Marked completed');displayAll();displayPending();}
+}
 
-            const response = await apiCall('addTask', params);
-            if (response.success) {
-                showNotification(response.message, 'success');
-                document.getElementById('addTaskForm').reset();
-                document.getElementById('recurringDaysGroup').style.display = 'none';
-            } else {
-                showNotification(response.message, 'error');
-            }
-        }
+function delTask(id){
+  if(!confirm('Delete this task?')) return;
+  const t=loadTasks().filter(x=>x.id!==id);
+  pushUndo();
+  saveTasks(t);
+  showNotification('Task deleted');
+  displayAll();displayPending();
+}
 
-        async function removeTask(id) {
-            if (!confirm(`Are you sure you want to delete task ID ${id}?`)) return;
-            const response = await apiCall('removeTask', { id });
-            if (response.success) {
-                showNotification(response.message, 'success');
-                const activeSection = document.querySelector('.section.active').id;
-                showSection(activeSection);
-            } else {
-                showNotification(response.message, 'error');
-            }
-        }
+function displayStats(){
+  const t=loadTasks(), total=t.length, comp=t.filter(x=>x.completed).length, pend=total-comp;
+  const overdue=t.filter(x=>!x.completed&&x.deadline<Date.now()/1000).length;
+  document.getElementById('statsContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value">${total}</div><div>Total</div></div>
+      <div class="stat-card"><div class="stat-value">${comp}</div><div>Completed</div></div>
+      <div class="stat-card"><div class="stat-value">${pend}</div><div>Pending</div></div>
+      <div class="stat-card"><div class="stat-value">${overdue}</div><div>Overdue</div></div>
+    </div>`;
+}
 
-        async function markCompleted(id) {
-            const response = await apiCall('markCompleted', { id });
-            if (response.success) {
-                showNotification(response.message, 'success');
-                const activeSection = document.querySelector('.section.active').id;
-                showSection(activeSection);
-            } else {
-                showNotification(response.message, 'error');
-            }
-        }
+function sortTasks(key){
+  const t=loadTasks().slice().sort((a,b)=>a[key]-b[key]);
+  displayTasks(t,'sortedTasksList');
+  showNotification(`Sorted by ${key}`);
+}
 
-        function displayTasks(taskList, elementId) {
-            const listElement = document.getElementById(elementId);
-            if (taskList.length === 0) {
-                listElement.innerHTML = '<div class="empty-state">No tasks to display here.</div>';
-                return;
-            }
-            listElement.innerHTML = taskList.map(createCard).join('');
-        }
+function undo(){
+  if(!undoStack.length){showNotification('Nothing to undo','error');return;}
+  redoStack.push(loadTasks());
+  const prev=undoStack.pop();
+  saveTasks(prev);
+  showNotification('Undo done');
+  displayAll();
+}
 
-        async function displayAllTasks() {
-            const response = await apiCall('getAllTasks');
-            if (response.success) displayTasks(response.tasks, 'allTasksList');
-        }
+function redo(){
+  if(!redoStack.length){showNotification('Nothing to redo','error');return;}
+  undoStack.push(loadTasks());
+  const next=redoStack.pop();
+  saveTasks(next);
+  showNotification('Redo done');
+  displayAll();
+}
 
-        async function displayPendingTasks() {
-            const response = await apiCall('getPendingTasks');
-            if (response.success) displayTasks(response.tasks, 'pendingTasksList');
-        }
-
-        async function displayRecommendedTask() {
-            const response = await apiCall('getTopTask');
-            const listElement = document.getElementById('recommendedTask');
-            if (response.success) {
-                listElement.innerHTML = createCard(response.task);
-            } else {
-                listElement.innerHTML = `<div class="empty-state">${response.message}</div>`;
-            }
-        }
-
-        async function displayStats() {
-            const response = await apiCall('getStats');
-            const content = document.getElementById('statsContent');
-            if (response.success) {
-                content.innerHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">${response.total}</div>
-                            <div class="stat-label">Total Tasks</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${response.completed}</div>
-                            <div class="stat-label">Completed Tasks</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${response.pending}</div>
-                            <div class="stat-label">Pending Tasks</div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">
-                            <div class="stat-value">${response.overdue}</div>
-                            <div class="stat-label">Overdue Tasks</div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                            <div class="stat-value">${response.completionRate}%</div>
-                            <div class="stat-label">Completion Rate</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        async function undo() {
-            const response = await apiCall('undo');
-            showNotification(response.message, response.success ? 'success' : 'error');
-            const activeSection = document.querySelector('.section.active').id;
-            showSection(activeSection);
-        }
-
-        async function redo() {
-            const response = await apiCall('redo');
-            showNotification(response.message, response.success ? 'success' : 'error');
-            const activeSection = document.querySelector('.section.active').id;
-            showSection(activeSection);
-        }
-
-        async function sortTasks(key) {
-            let response;
-            if (key === 'priority') response = await apiCall('sortByPriority');
-            else if (key === 'deadline') response = await apiCall('sortByDeadline');
-            else if (key === 'duration') response = await apiCall('sortByDuration');
-            
-            if (response && response.success) {
-                displayTasks(response.tasks, 'sortedTasksList');
-                showNotification(`Tasks sorted by ${key}`, 'success');
-            }
-        }
-
-        async function processRecurring() {
-            const response = await apiCall('processRecurring');
-            showNotification(response.message, 'success');
-            const activeSection = document.querySelector('.section.active').id;
-            showSection(activeSection);
-        }
-    </script>
+window.onload=()=>displayAll();
+</script>
 </body>
 </html>
